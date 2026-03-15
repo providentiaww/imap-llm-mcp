@@ -21,7 +21,7 @@ pytestmark = pytest.mark.integration
 
 # Import the IMAP client and tools
 from imap_mcp.imap_client import ImapClient
-from imap_mcp.config import Config
+from imap_mcp.config import ServerConfig
 from imap_mcp.models import Context
 from imap_mcp.tools import search_emails as search_emails_tool
 
