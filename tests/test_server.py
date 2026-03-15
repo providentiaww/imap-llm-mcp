@@ -220,7 +220,8 @@ class TestServer:
                     mock_args = argparse.Namespace(
                         config="test_config.yaml",
                         debug=True,
-                        dev=True
+                        dev=True,
+                        version=False
                     )
                     mock_parse_args.return_value = mock_args
                     
@@ -258,7 +259,8 @@ class TestServer:
                     mock_args = argparse.Namespace(
                         config="env_config.yaml",
                         debug=False,
-                        dev=False
+                        dev=False,
+                        version=False
                     )
                     mock_parse_args.return_value = mock_args
                     
