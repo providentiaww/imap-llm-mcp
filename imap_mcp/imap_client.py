@@ -88,11 +88,24 @@ class ImapClient:
     
     def ensure_connected(self) -> None:
         """Ensure that we are connected to the IMAP server.
-        
+
+        Detects stale connections (SSL errors, socket timeouts) and
+        automatically reconnects. This is critical for long-running
+        MCP server processes where IMAP connections go idle.
+
         Raises:
             ConnectionError: If connection fails
         """
-        if not self.connected:
+        if not self.connected or self.client is None:
+            self.connect()
+            return
+        # Probe the connection with a lightweight NOOP command
+        try:
+            self.client.noop()
+        except Exception:
+            logger.warning("IMAP connection stale, reconnecting...")
+            self.connected = False
+            self.client = None
             self.connect()
     
     def get_capabilities(self) -> List[str]:
