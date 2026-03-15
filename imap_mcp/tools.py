@@ -355,7 +355,74 @@ def register_tools(mcp: FastMCP, imap_client: ImapClient) -> None:
         results = results[:limit]
         
         return json.dumps(results, indent=2)
-    
+
+    @mcp.tool()
+    async def list_folders(ctx: Context) -> str:
+        """List all IMAP folders/mailboxes.
+
+        Returns:
+            JSON list of folder names
+        """
+        client = get_client_from_context(ctx)
+        folders = client.list_folders()
+        return json.dumps(folders, indent=2)
+
+    @mcp.tool()
+    async def batch_move_emails(
+        folder: str,
+        uids: List[int],
+        target_folder: str,
+        ctx: Context,
+    ) -> str:
+        """Move multiple emails to another folder in a single operation.
+
+        Args:
+            folder: Source folder
+            uids: List of email UIDs to move
+            target_folder: Destination folder
+            ctx: MCP context
+
+        Returns:
+            JSON with moved count and any errors
+        """
+        client = get_client_from_context(ctx)
+        moved = 0
+        errors = []
+        for uid in uids:
+            try:
+                client.move_email(uid, folder, target_folder)
+                moved += 1
+            except Exception as e:
+                errors.append({"uid": uid, "error": str(e)})
+        return json.dumps({"moved": moved, "failed": len(errors), "errors": errors})
+
+    @mcp.tool()
+    async def batch_delete_emails(
+        folder: str,
+        uids: List[int],
+        ctx: Context,
+    ) -> str:
+        """Delete multiple emails in a single operation.
+
+        Args:
+            folder: Folder containing the emails
+            uids: List of email UIDs to delete
+            ctx: MCP context
+
+        Returns:
+            JSON with deleted count and any errors
+        """
+        client = get_client_from_context(ctx)
+        deleted = 0
+        errors = []
+        for uid in uids:
+            try:
+                client.delete_email(uid, folder)
+                deleted += 1
+            except Exception as e:
+                errors.append({"uid": uid, "error": str(e)})
+        return json.dumps({"deleted": deleted, "failed": len(errors), "errors": errors})
+
     # Process email interactive session
     @mcp.tool()
     async def process_email(
