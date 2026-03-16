@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: risa-triage-config
+  namespace: risa
+  labels:
+    app: risa
+data:
+  # These files are mounted at /config/ in the container.
+  # To update: kubectl create configmap risa-triage-config --from-file=denylist.md --from-file=allowlist.md -n risa --dry-run=client -o yaml | kubectl apply -f -
+  denylist.md: |
+    # Populated from cron/k8s/denylist.md at deploy time
+    # Use the kubectl command above to hot-reload from updated files
+  allowlist.md: |
+    # Populated from cron/k8s/allowlist.md at deploy time
+    # Use the kubectl command above to hot-reload from updated files

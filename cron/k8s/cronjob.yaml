@@ -1,0 +1,60 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: risa-triage
+  namespace: risa
+  labels:
+    app: risa
+    component: triage-cron
+spec:
+  schedule: "*/30 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  startingDeadlineSeconds: 120
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 300
+      template:
+        metadata:
+          labels:
+            app: risa
+            component: triage-cron
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: risa-triage
+            image: provrepo.fxbg.providentiaworldwide.com:5000/risa-triage:latest
+            imagePullPolicy: Always
+            envFrom:
+            - secretRef:
+                name: risa-imap-credentials
+            env:
+            - name: DENYLIST_PATH
+              value: "/config/denylist.md"
+            - name: ALLOWLIST_PATH
+              value: "/config/allowlist.md"
+            - name: TRIAGE_FOLDER
+              value: "INBOX/Zora-Triage"
+            - name: TRAINING_FOLDER
+              value: "INBOX/Zora-imap-training"
+            - name: LOG_LEVEL
+              value: "INFO"
+            - name: METRICS_FILE
+              value: "/tmp/risa-metrics.prom"
+            volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 200m
+                memory: 128Mi
+          volumes:
+          - name: config
+            configMap:
+              name: risa-triage-config
