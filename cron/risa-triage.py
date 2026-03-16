@@ -197,11 +197,14 @@ def learn_from_training(conn, denylist, denylist_path):
 
     if new_domains:
         log.info(f"Learned {len(new_domains)} new domains from training: {new_domains}")
-        # Append to denylist file
-        with open(denylist_path, "a") as f:
-            f.write(f"\n## Learned from training folder ({datetime.now().strftime('%Y-%m-%d %H:%M')})\n")
-            for d in new_domains:
-                f.write(f"{d}\n")
+        # Try to append to denylist file (will fail on read-only ConfigMap mounts — that's OK)
+        try:
+            with open(denylist_path, "a") as f:
+                f.write(f"\n## Learned from training folder ({datetime.now().strftime('%Y-%m-%d %H:%M')})\n")
+                for d in new_domains:
+                    f.write(f"{d}\n")
+        except PermissionError:
+            log.info("Denylist is read-only (ConfigMap mount) — domains learned in-memory for this run only. Update ConfigMap to persist.")
 
     # Move processed training messages to triage (so they don't get re-learned)
     for uid_bytes in uids:
